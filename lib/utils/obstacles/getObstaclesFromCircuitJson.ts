@@ -553,7 +553,10 @@ export const getObstaclesFromCircuitJson = (
               x: rp.x,
               y: rp.y,
               layer: rp.route_type === "wire" ? rp.layer : rp.from_layer,
-              width: rp.route_type === "wire" ? rp.width : undefined,
+              width:
+                rp.route_type === "wire"
+                  ? Math.max(rp.width, rp.start_width ?? 0, rp.end_width ?? 0)
+                  : undefined,
               outgoingLayer: rp.route_type === "via" ? rp.to_layer : undefined,
               viaDiameter:
                 rp.route_type === "via" ? rp.outer_diameter : undefined,

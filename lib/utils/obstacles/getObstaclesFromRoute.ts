@@ -56,7 +56,7 @@ export const getObstaclesFromRoute = (
     }
     if (!isHorz && !isVert) {
       // Board-world angle in degrees. Include the copper at both round end caps.
-      const thickness = Math.max(start.width ?? 0, end.width ?? 0) || 0.1
+      const thickness = start.width ?? end.width ?? 0.1
       obstacle.width = Math.hypot(dx, dy) + thickness
       obstacle.height = thickness
       obstacle.ccwRotationDegrees = (Math.atan2(dy, dx) * 180) / Math.PI
