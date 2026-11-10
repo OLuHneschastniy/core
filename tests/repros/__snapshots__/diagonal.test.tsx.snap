@@ -2,7 +2,7 @@
 
 exports[`an existing diagonal copper segment can be an obstacle for the next routing pass 1`] = `
 {
-  "diagonalError": true,
-  "traceCount": 1,
+  "diagonalError": false,
+  "traceCount": 2,
 }
 `;

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { getObstaclesFromCircuitJson } from "lib/utils/obstacles/getObstaclesFromCircuitJson"
 import { getTestFixture } from "tests/fixtures/get-test-fixture"
 
 test("an existing diagonal copper segment can be an obstacle for the next routing pass", async () => {
@@ -34,6 +35,16 @@ test("an existing diagonal copper segment can be an obstacle for the next routin
     </board>,
   )
   await circuit.renderUntilSettled()
+  expect(failures).toEqual([])
+  expect(circuit.db.pcb_trace.list()).toHaveLength(2)
+  const fixedTrace = circuit.db.pcb_trace
+    .list()
+    .find((trace) => !trace.source_trace_id)!
+  const [segment] = getObstaclesFromCircuitJson([fixedTrace])
+  expect(segment!.ccwRotationDegrees).toBeCloseTo(45)
+  expect(segment!.width).toBeCloseTo(Math.hypot(2, 2) + 0.4)
+  expect(segment!.height).toBeCloseTo(0.4)
+  expect(segment!.layers).toEqual(["top"])
   expect({
     diagonalError: failures.some((error) =>
       error.includes("only supports horizontal and vertical"),
@@ -41,4 +52,31 @@ test("an existing diagonal copper segment can be an obstacle for the next routin
     traceCount: circuit.db.pcb_trace.list().length,
   }).toMatchSnapshot()
   await expect(circuit).toMatchPcbSnapshot(import.meta.path)
+})
+
+test("diagonal copper leaving a via occupies its outgoing layer", () => {
+  const obstacles = getObstaclesFromCircuitJson([
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "fixed",
+      route: [
+        { route_type: "wire", layer: "top", x: -1, y: -1, width: 0.3 },
+        {
+          route_type: "via",
+          from_layer: "top",
+          to_layer: "bottom",
+          x: 0,
+          y: 0,
+          outer_diameter: 0.65,
+        },
+        { route_type: "wire", layer: "bottom", x: 1, y: 1, width: 0.3 },
+      ],
+    },
+  ])
+  expect(obstacles.map(({ layers }) => layers)).toEqual([
+    ["top"],
+    ["top", "bottom"],
+    ["bottom"],
+  ])
+  expect(obstacles[1]!.width).toBe(0.65)
 })
